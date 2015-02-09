@@ -1,0 +1,6 @@
+# nodejs npm modules
+/node_modules
+
+/build/*
+
+undefined/

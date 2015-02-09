@@ -1,0 +1,55 @@
+{
+  "name": "intension-space",
+  "version": "0.1.0",
+  "description": "A grunty Phaser.js game",
+  "main": "build/js/app.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:lukewilde/phaser-blank.git"
+  },
+  "author": "Luke Wilde",
+  "license": "MIT",
+  "browser": {
+    "lodash": "./node_modules/lodash/dist/lodash.compat.js",
+    "Phaser": "./src/js/lib/phaser.arcade.js",
+    "Stats": "./src/js/lib/stats.min.js"
+  },
+  "browserify-shim": {
+    "Phaser": {
+      "exports": "Phaser"
+    },
+    "lodash": {
+      "exports": "_"
+    },
+    "Stats": {
+      "exports": "Stats"
+    }
+  },
+  "devDependencies": {
+    "browserify": "^8.1.3",
+    "browserify-shim": "^3.8.2",
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^3.3.0",
+    "grunt-cache-bust": "^0.4.5",
+    "grunt-connect-socket.io": "^0.7.1",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-compress": "^0.9.1",
+    "grunt-contrib-connect": "^0.9.0",
+    "grunt-contrib-copy": "^0.7.0",
+    "grunt-contrib-jade": "^0.14.1",
+    "grunt-contrib-jshint": "^0.11.0",
+    "grunt-contrib-stylus": "^0.20.0",
+    "grunt-contrib-uglify": "^0.7.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-open": "^0.2.3",
+    "grunt-pngmin": "^0.6.1"
+  },
+  "dependencies": {
+    "express": "^4.11.2",
+    "grunt-contrib-compress": "^0.9.1",
+    "lodash": "^2.4.1"
+  }
+}
