@@ -7,6 +7,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-connect-socket.io');
+    grunt.loadNpmTasks('grunt-express-server');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-jade');
     grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -15,7 +17,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-pngmin');
-    grunt.loadNpmTasks('grunt-connect-socket.io');
 
     var productionBuild = !!(grunt.cli.tasks.length && grunt.cli.tasks[0] === 'build');
 
@@ -47,10 +48,33 @@ module.exports = function (grunt) {
             },
             server: {
                 options: {
-                    port: 9001,
+                    port: 3700,
                     base: './build',
                     socketio: true,
                     keepalive: true
+                }
+            }
+        },
+        express: {
+            options: {
+                // Setting to `false` will effectively just run `node path/to/server.js`
+                background: false,
+
+                // Called when the spawned server throws errors
+                fallback: function() {},
+
+                // Override node env's PORT
+                port: 3700,
+            },
+            dev: {
+                options: {
+                    script: './server.js'
+                }
+            },
+            prod: {
+                options: {
+                    script: 'path/to/prod/server.js',
+                    node_env: 'production'
                 }
             }
         },
@@ -68,6 +92,10 @@ module.exports = function (grunt) {
                 livereload: productionBuild ? false : properties.liveReloadPort
             },
             js: {
+                files: '<%= project.dest %>/lib/*.js',
+                tasks: ['copy:jslib']
+            },
+            jslib: {
                 files: '<%= project.dest %>/**/*.js',
                 tasks: ['jade']
             },
@@ -178,8 +206,8 @@ module.exports = function (grunt) {
                         cwd: 'src/images/',
                         src: ['**'],
                         dest: 'build/images/'
-}
-]
+                    }
+                ]
             },
             audio: {
                 files: [
@@ -188,15 +216,45 @@ module.exports = function (grunt) {
                         cwd: 'src/audio/',
                         src: ['**'],
                         dest: 'build/audio/'
-}
-]
+                    }
+                ]
+            },
+            p2: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'src/js/',
+                        src: ['**'],
+                        dest: 'build/js/'
+                    }
+                ]
+            },
+            socketio: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'socket.io/',
+                        src: ['**'],
+                        dest: 'build/socket.io/'
+                    }
+                ]
+            },
+            jslib: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'src/js/lib/',
+                        src: ['**'],
+                        dest: 'build/js/lib/'
+                    }
+                ]
             }
         },
 
         uglify: {
             options: {
                 banner: '<%= project.banner %>',
-                beautify: true
+                beautify: false
             },
             dist: {
                 files: {
@@ -234,7 +292,8 @@ module.exports = function (grunt) {
         'stylus',
         'copy',
         'cacheBust',
-        'connect',
+        'connect:dev',
+        'express:dev',
         'open',
         'watch',
     ]);
@@ -248,7 +307,8 @@ module.exports = function (grunt) {
         'uglify',
         'copy',
         'cacheBust',
-        'connect',
+        'connect:dev',
+        'express:dev',
         'open',
         'watch'
     ]);
