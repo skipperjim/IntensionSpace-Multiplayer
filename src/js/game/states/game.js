@@ -16,7 +16,7 @@
             this.setupBackground();
             this.setupPlayer();
             //this.setupBitmapTrail();
-            this.setupTrail();
+            //this.setupTrail();
             
             this.setupEnemies();
             this.setupBullets();

@@ -2,6 +2,8 @@ var properties = require('./src/js/game/properties.js');
 
 module.exports = function (grunt) {
 
+    grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-cache-bust');
     grunt.loadNpmTasks('grunt-contrib-clean');
@@ -29,6 +31,7 @@ module.exports = function (grunt) {
             dest: 'build/js',
             bundle: 'build/js/app.min.js',
             port: properties.port,
+            sources: ['gruntfile.js', 'src/js/**/*.js'],
             banner: '/*!\n' +
                 ' * <%= pkg.title %>\n' +
                 ' * <%= pkg.description %>\n' +
@@ -38,6 +41,40 @@ module.exports = function (grunt) {
                 ' * Copyright <%= pkg.author %>. <%= pkg.license %> licensed.\n' +
                 ' * Made using Phaser Blank <https://github.com/lukewilde/phaser-blank/>\n' +
                 ' */\n'
+        },
+        requirejs: {
+            dev: {
+                options: {
+                    baseUrl: '.',
+                    name: 'src/js/lib/module.js',
+                    mainConfigFile: "src/js/game/app.js",
+                    out: 'build/main-built.js',
+                    optimize: 'uglify',
+                    paths: {
+                        clientio: 'src/js/client.js',
+                        serverio: 'src/js/lib/socket.io.js',
+                    }
+                }
+            },
+            compile: {
+                options: {
+                    appDir: 'src',
+                    baseUrl: "src/js/lib",
+                    mainConfigFile: "src/js/lib/config.js",
+                    dir: 'build',
+                    done: function (done, output) {
+                        var duplicates = require('rjs-build-analysis').duplicates(output);
+
+                        if (duplicates.length > 0) {
+                            grunt.log.subhead('Duplicates found in requirejs build:');
+                            grunt.log.warn(duplicates);
+                            done(new Error('r.js built duplicate modules, please check the excludes option.'));
+                        }
+
+                        done();
+                    }
+                }
+            }
         },
         connect: {
             dev: {
@@ -59,10 +96,8 @@ module.exports = function (grunt) {
             options: {
                 // Setting to `false` will effectively just run `node path/to/server.js`
                 background: false,
-
                 // Called when the spawned server throws errors
                 fallback: function() {},
-
                 // Override node env's PORT
                 port: 3700,
             },
@@ -79,17 +114,25 @@ module.exports = function (grunt) {
             }
         },
         jshint: {
-            files: [
-                'gruntfile.js',
-                '<%= project.js %>'
-                ],
             options: {
                 jshintrc: '.jshintrc'
             }
         },
         watch: {
             options: {
-                livereload: productionBuild ? false : properties.liveReloadPort
+                //livereload: productionBuild ? false : properties.liveReloadPort
+                livereload: true
+            },
+            express: {
+                files: ['**/*.js'],
+                tasks: ['express:dev'],
+                options: {
+                    spawn: false // for grunt-contrib-watch v0.5.0+, "nospawn: true" for lower versions. Without this option specified express won't be reloaded
+                }
+            },
+            clientjs: {
+                files: 'src/js/*.js',
+                tasks: ['copy:clientjs']  
             },
             js: {
                 files: '<%= project.dest %>/lib/*.js',
@@ -233,9 +276,19 @@ module.exports = function (grunt) {
                 files: [
                     {
                         expand: true,
-                        cwd: 'socket.io/',
-                        src: ['**'],
+                        cwd: 'node_modules/socket.io-client/',
+                        src: ['socket.io.js'],
                         dest: 'build/socket.io/'
+                    }
+                ]
+            },
+            clientjs: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'src/js/',
+                        src: ['**'],
+                        dest: 'build/js/'
                     }
                 ]
             },
@@ -250,7 +303,15 @@ module.exports = function (grunt) {
                 ]
             }
         },
-
+        concat: {
+            js: {
+                src: [
+                    //'build/js/app.min.js', 'build/js/lib/socket.io.js', 'build/js/lib/client.js'
+                    'src/js/lib/socket.io.js', 'src/js/client.js', 'build/js/app.min.js'
+                ],
+                dest: 'build/js/complete-app.min.js'
+            }
+        },
         uglify: {
             options: {
                 banner: '<%= project.banner %>',
@@ -259,6 +320,7 @@ module.exports = function (grunt) {
             dist: {
                 files: {
                     '<%= project.bundle %>': '<%= project.bundle %>'
+                    //'build/js/complete-app.js': 'build/js/complete-app.min.js'
                 }
             }
         },
