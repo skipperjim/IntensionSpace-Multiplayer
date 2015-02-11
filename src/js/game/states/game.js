@@ -1,4 +1,5 @@
 (function () {
+    
     var Game = function (game) {
 
     };
@@ -16,7 +17,11 @@
             this.setupBackground();
             this.setupPlayer();
             //this.setupBitmapTrail();
-            //this.setupTrail();
+            this.setupTrail();
+            
+            var playa = new Playah(this.game, 600, 300, 0.5);
+            playa.anchor.setTo(0.5, 0.5);
+            this.game.add.existing(playa);
             
             this.setupEnemies();
             this.setupBullets();

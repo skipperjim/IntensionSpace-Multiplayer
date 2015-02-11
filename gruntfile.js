@@ -2,7 +2,6 @@ var properties = require('./src/js/game/properties.js');
 
 module.exports = function (grunt) {
 
-    grunt.loadNpmTasks('grunt-contrib-requirejs');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-cache-bust');
@@ -19,6 +18,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-pngmin');
+    grunt.loadNpmTasks('grunt-jsdoc');
 
     var productionBuild = !!(grunt.cli.tasks.length && grunt.cli.tasks[0] === 'build');
 
@@ -31,7 +31,7 @@ module.exports = function (grunt) {
             dest: 'build/js',
             bundle: 'build/js/app.min.js',
             port: properties.port,
-            sources: ['gruntfile.js', 'src/js/**/*.js'],
+            sources: ['gruntfile.js'],
             banner: '/*!\n' +
                 ' * <%= pkg.title %>\n' +
                 ' * <%= pkg.description %>\n' +
@@ -42,40 +42,7 @@ module.exports = function (grunt) {
                 ' * Made using Phaser Blank <https://github.com/lukewilde/phaser-blank/>\n' +
                 ' */\n'
         },
-        requirejs: {
-            dev: {
-                options: {
-                    baseUrl: '.',
-                    name: 'src/js/lib/module.js',
-                    mainConfigFile: "src/js/game/app.js",
-                    out: 'build/main-built.js',
-                    optimize: 'uglify',
-                    paths: {
-                        clientio: 'src/js/client.js',
-                        serverio: 'src/js/lib/socket.io.js',
-                    }
-                }
-            },
-            compile: {
-                options: {
-                    appDir: 'src',
-                    baseUrl: "src/js/lib",
-                    mainConfigFile: "src/js/lib/config.js",
-                    dir: 'build',
-                    done: function (done, output) {
-                        var duplicates = require('rjs-build-analysis').duplicates(output);
-
-                        if (duplicates.length > 0) {
-                            grunt.log.subhead('Duplicates found in requirejs build:');
-                            grunt.log.warn(duplicates);
-                            done(new Error('r.js built duplicate modules, please check the excludes option.'));
-                        }
-
-                        done();
-                    }
-                }
-            }
-        },
+        
         connect: {
             dev: {
                 options: {
@@ -97,7 +64,7 @@ module.exports = function (grunt) {
                 // Setting to `false` will effectively just run `node path/to/server.js`
                 background: false,
                 // Called when the spawned server throws errors
-                fallback: function() {},
+                fallback: function () {},
                 // Override node env's PORT
                 port: 3700,
             },
@@ -130,17 +97,13 @@ module.exports = function (grunt) {
                     spawn: false // for grunt-contrib-watch v0.5.0+, "nospawn: true" for lower versions. Without this option specified express won't be reloaded
                 }
             },
-            clientjs: {
-                files: 'src/js/*.js',
-                tasks: ['copy:clientjs']  
-            },
-            js: {
-                files: '<%= project.dest %>/lib/*.js',
-                tasks: ['copy:jslib']
+            gamesrc: {
+                files: 'src/js/**/**/*.js',
+                tasks: ['concat', 'uglify']
             },
             jslib: {
                 files: '<%= project.dest %>/**/*.js',
-                tasks: ['jade']
+                tasks: []
             },
             jade: {
                 files: 'src/templates/*.jade',
@@ -167,7 +130,7 @@ module.exports = function (grunt) {
                 options: {
                     transform: ['browserify-shim'],
                     watch: true
-                        //debug: !productionBuild
+                    //debug: !productionBuild
                 }
             }
         },
@@ -202,6 +165,7 @@ module.exports = function (grunt) {
         jade: {
             compile: {
                 options: {
+                    pretty: true,
                     data: {
                         properties: properties,
                         productionBuild: productionBuild
@@ -262,13 +226,13 @@ module.exports = function (grunt) {
                     }
                 ]
             },
-            p2: {
+            jslib: {
                 files: [
                     {
                         expand: true,
-                        cwd: 'src/js/',
+                        cwd: 'src/js/lib',
                         src: ['**'],
-                        dest: 'build/js/'
+                        dest: 'build/js/lib'
                     }
                 ]
             },
@@ -278,53 +242,41 @@ module.exports = function (grunt) {
                         expand: true,
                         cwd: 'node_modules/socket.io-client/',
                         src: ['socket.io.js'],
-                        dest: 'build/socket.io/'
-                    }
-                ]
-            },
-            clientjs: {
-                files: [
-                    {
-                        expand: true,
-                        cwd: 'src/js/',
-                        src: ['**'],
-                        dest: 'build/js/'
-                    }
-                ]
-            },
-            jslib: {
-                files: [
-                    {
-                        expand: true,
-                        cwd: 'src/js/lib/',
-                        src: ['**'],
-                        dest: 'build/js/lib/'
+                        dest: 'src/js/lib/'
                     }
                 ]
             }
         },
         concat: {
             js: {
-                src: [
-                    //'build/js/app.min.js', 'build/js/lib/socket.io.js', 'build/js/lib/client.js'
-                    'src/js/lib/socket.io.js', 'src/js/client.js', 'build/js/app.min.js'
-                ],
-                dest: 'build/js/complete-app.min.js'
+                src: ['build/js/app.min.js', 'src/js/lib/socket.io.js', 'src/js/game/client.js'],
+                dest: 'build/js/app.min.js'
             }
         },
         uglify: {
             options: {
                 banner: '<%= project.banner %>',
-                beautify: false
+                preserveComments: false,
+                beautify: false,
+                mangle: false
             },
             dist: {
                 files: {
                     '<%= project.bundle %>': '<%= project.bundle %>'
-                    //'build/js/complete-app.js': 'build/js/complete-app.min.js'
                 }
             }
         },
-
+        jsdoc: {
+            dist: {
+                src: ['src/js/game/app.js'],
+                jsdoc: './node_modules/.bin/jsdoc',
+                options: {
+                    destination: 'doc',
+                    configure: './node_modules/jsdoc/conf.json',
+                    template: './node_modules/ink-docstrap/template'
+                }
+            }
+        },
         compress: {
             options: {
                 archive: '<%= pkg.name %>.zip'
@@ -352,6 +304,9 @@ module.exports = function (grunt) {
         'browserify',
         'jade',
         'stylus',
+        'concat',
+        'uglify',
+        //'replace', http://mandarin.no/article/javascript-game-development-with-nodejs-grunt-and-texture-packer/
         'copy',
         'cacheBust',
         'connect:dev',
@@ -366,15 +321,17 @@ module.exports = function (grunt) {
         'browserify',
         'jade',
         'stylus',
-        'uglify',
         'copy',
+        'uglify',
+        'concat',
         'cacheBust',
         'connect:dev',
         'express:dev',
         'open',
         'watch'
     ]);
-    
+
+    grunt.registerTask('docs', ['jsdoc']);
     grunt.registerTask('optimise', ['pngmin', 'copy:images']);
     grunt.registerTask('cocoon', ['compress:cocoon']);
     grunt.registerTask('zip', ['compress:zip']);
