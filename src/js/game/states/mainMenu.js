@@ -15,19 +15,23 @@
             //  Here all we're doing is playing some music and adding a picture and button
             //  Naturally I expect you to do something significantly better :)
 
-            this.add.sprite(0, 0, 'titlepage');
-
-            this.loadingText = this.add.text(this.game.width / 2, this.game.height / 2 + 80, "Press Z or tap/click game to start", {
-                font: "20px monospace",
-                fill: "#fff"
-            });
-            this.loadingText.anchor.setTo(0.5, 0.5);
+            this.background = this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'milkyway');
+            //give the background image a scroll speed in x
+            this.background.autoScroll(-20, 0);
+            
+            //start game text
+            var text = "Tap to begin";
+            var style = { font: "30px Arial", fill: "#fff", align: "center" };
+            var t = this.game.add.text(this.game.width/2, this.game.height/2, text, style);
+            t.anchor.set(0.5);
+            
+            
 
         },
 
         update: function () {
 
-            if (this.input.keyboard.isDown(Phaser.Keyboard.Z) || this.input.activePointer.isDown) {
+            if (this.input.activePointer.isDown) {
                 this.startGame();
             }
             //  Do some nice funky main menu effect here

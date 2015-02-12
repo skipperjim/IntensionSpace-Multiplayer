@@ -5,7 +5,7 @@ socket.on('connect', function(){
 });
 
 socket.on('news', function (data) {
-    console.log("Player connected: "+data);
+    //console.log("Player connected: "+data);
     socket.emit('my other event', {
         my: 'data'
     });

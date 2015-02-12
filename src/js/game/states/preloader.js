@@ -3,7 +3,7 @@
 
         this.background = null;
         this.preloadBar = null;
-        
+
         //this.ready = false;
     };
 
@@ -18,7 +18,7 @@
             //  Then we tell Phaser that we want it to scale up to whatever the browser can handle, but to do it proportionally
             //this.game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT; //NO_SCALE, RESIZE, SHOW_ALL*, USER_SCALE
             //this.game.scale.setScreenSize();
-            
+
             // Set background color of menu
             this.stage.backgroundColor = '#2d2d2d';
             //  Show the loading progress bar asset we loaded in boot.js
@@ -38,18 +38,33 @@
             this.load.image('milkyway', 'images/MilkyWay_Large.jpg#grunt-cache-bust');
             this.load.image('stars', 'images/starfield.jpg#grunt-cache-bust');
             this.load.image('bullet', 'images/bullet.png#grunt-cache-bust');
-            this.load.image('rocket', 'images/bomb.png#grunt-cache-bust');
+            this.load.image('missile', 'images/bomb.png#grunt-cache-bust');
             this.load.image('enemyBullet', 'images/enemy-bullet.png#grunt-cache-bust');
             this.load.image('powerup1', 'images/powerup1.png#grunt-cache-bust');
             this.load.spritesheet('greenEnemy', 'images/enemy.png#grunt-cache-bust', 32, 32);
             this.load.spritesheet('whiteEnemy', 'images/shooting-enemy.png#grunt-cache-bust', 32, 32);
             this.load.spritesheet('boss', 'images/boss.png#grunt-cache-bust', 93, 75);
             this.load.spritesheet('explosion', 'images/explosion.png#grunt-cache-bust', 32, 32);
-            this.load.spritesheet('player', 'images/player.png#grunt-cache-bust', 64, 64);
+
+            this.load.image('player', 'images/frigate_01.png#grunt-cache-bust');
             this.load.image('frigate_01', 'images/frigate_01.png#grunt-cache-bust');
             this.load.image('frigate_02', 'images/frigate_02.png#grunt-cache-bust');
             this.load.image('frigate_03', 'images/frigate_03.png#grunt-cache-bust');
+            this.load.image('frigate_04', 'images/frigate_04.png#grunt-cache-bust');
             this.load.image('jets', 'images/jets.png#grunt-cache-bust');
+
+            this.game.load.image('large-asteroid_01', 'images/asteroid_01.png#grunt-cache-bust');
+            this.game.load.image('large-asteroid_02', 'images/asteroid_02.png#grunt-cache-bust');
+            this.game.load.image('large-asteroid_03', 'images/asteroid_03.png#grunt-cache-bust');
+            this.game.load.image('medium-asteroid_01', 'images/asteroid_04.png#grunt-cache-bust');
+            this.game.load.image('medium-asteroid_02', 'images/asteroid_05.png#grunt-cache-bust');
+            this.game.load.image('medium-asteroid_03', 'images/asteroid_06.png#grunt-cache-bust');
+            this.game.load.image('medium-asteroid_04', 'images/asteroid_07.png#grunt-cache-bust');
+            this.game.load.image('small-asteroid_01', 'images/asteroid_08.png#grunt-cache-bust');
+            this.game.load.image('small-asteroid_02', 'images/asteroid_09.png#grunt-cache-bust');
+            this.game.load.image('small-asteroid_03', 'images/asteroid_10.png#grunt-cache-bust');
+            this.game.load.image('small-asteroid_04', 'images/asteroid_11.png#grunt-cache-bust');
+
             /*this.load.audio('explosion', ['assets/explosion.ogg', 'assets/explosion.wav']);
             this.load.audio('playerExplosion', ['assets/player-explosion.ogg', 'assets/player-explosion.wav']);
             this.load.audio('enemyFire', ['assets/enemy-fire.ogg', 'assets/enemy-fire.wav']);
@@ -81,7 +96,7 @@
             //if (this.cache.isSoundDecoded('titleMusic') && this.ready == false)
             //{
             //  this.ready = true;
-            this.state.start('Game');
+            this.state.start('MainMenu');
             //}
 
         }

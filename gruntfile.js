@@ -98,7 +98,7 @@ module.exports = function (grunt) {
                 }
             },
             gamesrc: {
-                files: 'src/js/**/**/*.js',
+                files: 'src/js/game/**/*.js',
                 tasks: ['concat', 'uglify']
             },
             jslib: {
@@ -257,7 +257,7 @@ module.exports = function (grunt) {
             options: {
                 banner: '<%= project.banner %>',
                 preserveComments: false,
-                beautify: false,
+                beautify: true,
                 mangle: false
             },
             dist: {

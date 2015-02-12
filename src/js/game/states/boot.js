@@ -1,6 +1,7 @@
 (function () {
     var Stats = require('Stats');
     var properties = require('../properties');
+    
     var Boot = function (game) {
 
     };
