@@ -3,7 +3,7 @@
 
         this.background = null;
         this.preloadBar = null;
-
+        
         //this.ready = false;
     };
 
@@ -11,9 +11,17 @@
 
         preload: function () {
 
-            //  Show the loading progress bar asset we loaded in boot.js
-            this.stage.backgroundColor = '#2d2d2d';
+            //  This sets a limit on the up-scale
+            //this.game.scale.maxWidth = 800;
+            //this.game.scale.maxHeight = 600;
 
+            //  Then we tell Phaser that we want it to scale up to whatever the browser can handle, but to do it proportionally
+            //this.game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT; //NO_SCALE, RESIZE, SHOW_ALL*, USER_SCALE
+            //this.game.scale.setScreenSize();
+            
+            // Set background color of menu
+            this.stage.backgroundColor = '#2d2d2d';
+            //  Show the loading progress bar asset we loaded in boot.js
             this.preloadBar = this.add.sprite(this.game.width / 2 - 100, this.game.height / 2, 'preloaderBar');
             this.add.text(this.game.width / 2, this.game.height / 2 - 30, "Loading...", {
                 font: "32px monospace",
@@ -30,6 +38,7 @@
             this.load.image('milkyway', 'images/MilkyWay_Large.jpg#grunt-cache-bust');
             this.load.image('stars', 'images/starfield.jpg#grunt-cache-bust');
             this.load.image('bullet', 'images/bullet.png#grunt-cache-bust');
+            this.load.image('rocket', 'images/bomb.png#grunt-cache-bust');
             this.load.image('enemyBullet', 'images/enemy-bullet.png#grunt-cache-bust');
             this.load.image('powerup1', 'images/powerup1.png#grunt-cache-bust');
             this.load.spritesheet('greenEnemy', 'images/enemy.png#grunt-cache-bust', 32, 32);

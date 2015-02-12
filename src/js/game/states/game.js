@@ -1,9 +1,116 @@
 (function () {
-    
+
+    // Missile constructor
+    var Missile = function (game, x, y) {
+        Phaser.Sprite.call(this, game, x, y, 'rocket');
+
+        // Set the pivot point for this sprite to the center
+        this.anchor.setTo(0.5, 0.5);
+
+        // Enable physics on the missile
+        this.game.physics.enable(this, Phaser.Physics.ARCADE);
+
+        // Define constants that affect motion
+        this.SPEED = 250; // missile speed pixels/second
+        this.TURN_RATE = 5; // turn rate in degrees/frame
+        this.WOBBLE_LIMIT = 15; // degrees
+        this.WOBBLE_SPEED = 250; // milliseconds
+        this.SMOKE_LIFETIME = 3000; // milliseconds
+
+        /*// Create a variable called wobble that tweens back and forth between
+        // -this.WOBBLE_LIMIT and +this.WOBBLE_LIMIT forever
+        this.wobble = this.WOBBLE_LIMIT;
+        this.game.add.tween(this)
+            .to({
+                    wobble: -this.WOBBLE_LIMIT
+                },
+                this.WOBBLE_SPEED, Phaser.Easing.Sinusoidal.InOut, true, 0,
+                Number.POSITIVE_INFINITY, true
+            );*/
+
+        /*// Add a smoke emitter with 100 particles positioned relative to the bottom
+        // center of this missile
+        this.smokeEmitter = this.game.add.emitter(0, 0, 100);
+
+        // Set motion parameters for the emitted particles
+        this.smokeEmitter.gravity = 0;
+        this.smokeEmitter.setXSpeed(0, 0);
+        this.smokeEmitter.setYSpeed(-80, -50); // make smoke drift upwards
+
+        // Make particles fade out after 1000ms
+        this.smokeEmitter.setAlpha(1, 0, this.SMOKE_LIFETIME,
+            Phaser.Easing.Linear.InOut);
+
+        // Create the actual particles
+        this.smokeEmitter.makeParticles('smoke');
+
+        // Start emitting smoke particles one at a time (explode=false) with a
+        // lifespan of this.SMOKE_LIFETIME at 50ms intervals
+        this.smokeEmitter.start(false, this.SMOKE_LIFETIME, 50);*/
+    };
+    // Missiles are a type of Phaser.Sprite
+    Missile.prototype = Object.create(Phaser.Sprite.prototype);
+    Missile.prototype.constructor = Missile;
+
+    Missile.prototype.update = function () {
+        /*// If this missile is dead, don't do any of these calculations
+        // Also, turn off the smoke emitter
+        if (!this.alive) {
+            this.smokeEmitter.on = false;
+            return;
+        } else {
+            this.smokeEmitter.on = true;
+        }
+
+        // Position the smoke emitter at the center of the missile
+        this.smokeEmitter.x = this.x;
+        this.smokeEmitter.y = this.y;
+*/
+        // Calculate the angle from the missile to the mouse cursor game.input.x
+        // and game.input.y are the mouse position; substitute with whatever
+        // target coordinates you need.
+        var targetAngle = this.game.math.angleBetween(
+            this.x, this.y,
+            this.game.input.activePointer.x, this.game.input.activePointer.y
+        );
+
+        // Add our "wobble" factor to the targetAngle to make the missile wobble
+        // Remember that this.wobble is tweening (above)
+        targetAngle += this.game.math.degToRad(this.wobble);
+
+        // Gradually (this.TURN_RATE) aim the missile towards the target angle
+        if (this.rotation !== targetAngle) {
+            // Calculate difference between the current angle and targetAngle
+            var delta = targetAngle - this.rotation;
+
+            // Keep it in range from -180 to 180 to make the most efficient turns.
+            if (delta > Math.PI) delta -= Math.PI * 2;
+            if (delta < -Math.PI) delta += Math.PI * 2;
+
+            if (delta > 0) {
+                // Turn clockwise
+                this.angle += this.TURN_RATE;
+            } else {
+                // Turn counter-clockwise
+                this.angle -= this.TURN_RATE;
+            }
+
+            // Just set angle to target angle if they are close
+            if (Math.abs(delta) < this.game.math.degToRad(this.TURN_RATE)) {
+                this.rotation = targetAngle;
+            }
+        }
+
+        // Calculate velocity vector based on this.rotation and this.SPEED
+        this.body.velocity.x = Math.cos(this.rotation) * this.SPEED;
+        this.body.velocity.y = Math.sin(this.rotation) * this.SPEED;
+    }
+
+
     var Game = function (game) {
 
     };
-
+    //var Player = require('../entities/Player');
     Game.prototype = {
 
         create: function () {
@@ -11,19 +118,19 @@
             this.game.renderer.clearBeforeRender = false;
             this.game.renderer.roundPixels = true;
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
-            this.game.world.setBounds(0, 0, 1920, 1324);            
-            
+            this.game.world.setBounds(0, 0, 1920, 1324);
+
             // Game functions
             this.setupBackground();
             this.setupPlayer();
             //this.setupBitmapTrail();
             this.setupTrail();
-            
-            var playa = new Playah(this.game, 600, 300, 0.5);
-            playa.anchor.setTo(0.5, 0.5);
-            this.game.add.existing(playa);
-            
+
+            // Create a group to hold the missile
+            this.missileGroup = this.game.add.group();
+
             this.setupEnemies();
+            this.setupMissiles();
             this.setupBullets();
             this.setupExplosions();
             this.setupPlayerIcons();
@@ -33,24 +140,24 @@
             // Create four arrow keys
             this.cursors = this.input.keyboard.createCursorKeys();
             // And add KeyCaptures for WASD and Spacebar
-            this.game.input.keyboard.addKeyCapture([ Phaser.Keyboard.W ]);
-            this.game.input.keyboard.addKeyCapture([ Phaser.Keyboard.A ]);
-            this.game.input.keyboard.addKeyCapture([ Phaser.Keyboard.S ]);
-            this.game.input.keyboard.addKeyCapture([ Phaser.Keyboard.D ]);
-            this.game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
-            
+            this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.W]);
+            this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.A]);
+            this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.S]);
+            this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.D]);
+            this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
+
             // Define constants
             this.SHOT_DELAY = 100; // milliseconds (10 bullets/second)
             this.BULLET_SPEED = 400; // pixels/second
             this.NUMBER_OF_BULLETS = 20;
-            
+
             // Simulate a pointer click/tap input at the center of the stage
             // when the example begins running.
-            this.game.input.activePointer.x = this.game.width/2;
-            this.game.input.activePointer.y = this.game.height/2;
-            
+            this.game.input.activePointer.x = this.game.width / 2;
+            this.game.input.activePointer.y = this.game.height / 2;
+
         },
-        
+
         update: function () {
             this.checkCollisions();
             //this.spawnEnemies();
@@ -58,13 +165,32 @@
             this.processPlayerInput();
             this.processDelayedEffects();
             //this.renderBitmapTrail();
-            
+
+            this.renderMissile();
+
             // These functions below are not needed/implemented, but do not delete
             //this.scrollBackground();
             /*this.screenWrap(this.player);
             this.bulletPool.forEachExists(this.screenWrap, this);*/
         },
-        
+
+        renderMissile: function () {
+            // If there aren't any missiles, launch one
+            if (this.missileGroup.countLiving() === 0) {
+                this.launchMissile(this.game.width / 2, this.game.height - 16);
+            }
+
+            // If any missile is within a certain distance of the mouse pointer, blow it up
+            this.missileGroup.forEachAlive(function (m) {
+                var distance = this.game.math.distance(m.x, m.y,
+                    this.game.input.activePointer.x, this.game.input.activePointer.y);
+                if (distance < 50) {
+                    m.kill();
+                    this.getExplosion(m.x, m.y);
+                }
+            }, this);
+        },
+
         render: function () {
             // debug blocks around sprites and sheit
             //this.game.debug.body(this.player);
@@ -77,26 +203,26 @@
             //this.game.debug.text('angularDrag: ' + this.player.body.angularDrag, 32, 264);
             //this.game.debug.text('deltaZ: ' + this.player.body.deltaZ(), 32, 296);
         },
-        
+
         // create()- related functions
         setupBackground: function () {
             //this.background = this.game.add.sprite(0, 0, 'milkyway');
             this.background = this.game.add.tileSprite(0, 0, 1920, 1324, 'milkyway');
         },
-        
+
         setupPlayer: function () {
             this.player = this.add.sprite(this.game.width / 2, this.game.height / 2, 'frigate_01');
             this.player.anchor.setTo(0.5);
-            
+
             //  and its physics settings
             this.physics.enable(this.player, Phaser.Physics.ARCADE);
             this.player.body.drag.set(50);
             this.player.body.maxVelocity.set(200);
-            
+
             // 25 x 25 pixel hitbox, centered
             this.player.body.setSize(25, 25, 0, 0);
             this.player.body.collideWorldBounds = true;
-            
+
             // Player Properties
             this.weaponLevel = 0;
             //this.player.speed = 300;
@@ -106,8 +232,8 @@
             // Have the camera follow player ship
             this.game.camera.follow(this.player);
         },
-        
-        setupTrail: function() {
+
+        setupTrail: function () {
             //create an emitter
             this.emitter = this.game.add.emitter(0, 0, 50);
             this.emitter.makeParticles('jets');
@@ -123,20 +249,20 @@
 
             px *= -1;
             py *= -1;
-            
+
             // setup options for the emitter
             this.emitter.lifespan = 500;
-            this.emitter.maxParticleSpeed = new Phaser.Point(-100,50);
-            this.emitter.minParticleSpeed = new Phaser.Point(-200,-50);
-            
+            this.emitter.maxParticleSpeed = new Phaser.Point(-100, 50);
+            this.emitter.minParticleSpeed = new Phaser.Point(-200, -50);
+
         },
-        
-        setupBitmapTrail: function(){
+
+        setupBitmapTrail: function () {
             this.bmd = this.game.add.bitmapData(1920, 1324);
             this.bmd.context.fillStyle = '#ffffff';
-            var bg = this.game.add.sprite(0, 0, this.bmd);  
+            var bg = this.game.add.sprite(0, 0, this.bmd);
         },
-        
+
         setupEnemies: function () {
             // Green enemy 'enemy'
             this.enemyPool = this.add.group();
@@ -205,7 +331,7 @@
             this.boss = this.bossPool.getTop();
             this.bossApproaching = false;
         },
-        
+
         setupBullets: function () {
             this.enemyBulletPool = this.add.group();
             this.enemyBulletPool.enableBody = true;
@@ -231,12 +357,52 @@
             // Automatically kill the bullet sprites when they go out of bounds
             this.bulletPool.setAll('outOfBoundsKill', true);
             this.bulletPool.setAll('checkWorldBounds', true);
-            
+
             // Rate of fire
             this.nextShotAt = 0;
             this.shotDelay = Phaser.Timer.SECOND * 0.1;
         },
-        
+
+        setupMissiles: function () {
+            // If there aren't any missiles, launch one
+            if (this.missileGroup.countLiving() === 0) {
+                this.fireMissile(this.game.width / 2, this.game.height - 16);
+            }
+
+            // If any missile is within a certain distance of the mouse pointer, blow it up
+            this.missileGroup.forEachAlive(function (m) {
+                var distance = this.game.math.distance(m.x, m.y,
+                    this.player.x, this.player.y);
+                if (distance < 50) {
+                    m.kill();
+                    this.explode(m);
+                }
+            }, this);
+
+        },
+
+        fireMissile: function (x, y) {
+            // // Get the first dead missile from the missileGroup
+            var missile = this.missileGroup.getFirstDead();
+
+            // If there aren't any available, create a new one
+            if (missile === null) {
+                missile = new Missile(this.game);
+                this.missileGroup.add(missile);
+            }
+
+            // Revive the missile (set it's alive property to true)
+            // You can also define a onRevived event handler in your explosion objects
+            // to do stuff when they are revived.
+            missile.revive();
+
+            // Move the missile to the given coordinates
+            missile.x = x;
+            missile.y = y;
+
+            return missile;
+        },
+
         setupExplosions: function () {
             this.explosionPool = this.add.group();
             this.explosionPool.enableBody = true;
@@ -248,7 +414,7 @@
                 explosion.animations.add('boom');
             });
         },
-        
+
         setupPlayerIcons: function () {
             // Setup sprite group for Power-Ups
             this.powerUpPool = this.add.group();
@@ -270,7 +436,7 @@
                 life.anchor.setTo(0.5, 0.5);
             }
         },
-        
+
         setupText: function () {
             this.instructions = this.add.text(this.game.width / 2, this.game.height - 100, 'Use Arrow Keys to Move, Press SPACE to Fire\n' + 'Tapping/clicking does both', {
                 font: '20px monospace',
@@ -286,9 +452,9 @@
                 align: 'center'
             });
             this.scoreText.anchor.setTo(0.5, 0.5);
-            
+
         },
-        
+
         setupAudio: function () {
             this.explosionSFX = this.add.audio('explosion');
             this.playerExplosionSFX = this.add.audio('playerExplosion');
@@ -296,7 +462,7 @@
             this.playerFireSFX = this.add.audio('playerFire');
             this.powerUpSFX = this.add.audio('powerUp');
         },
-        
+
         // update()- related functions
         checkCollisions: function () {
             this.physics.arcade.overlap(this.bulletPool, this.enemyPool, this.enemyHit, null, this);
@@ -310,7 +476,7 @@
                 this.physics.arcade.overlap(this.player, this.bossPool, this.playerHit, null, this);
             }
         },
-        
+
         spawnEnemies: function () {
             if (this.nextEnemyAt < this.time.now && this.enemyPool.countDead() > 0) {
                 this.nextEnemyAt = this.time.now + this.enemyDelay;
@@ -340,7 +506,7 @@
                 shooter.nextShotAt = 0;
             }
         },
-        
+
         enemyFire: function () {
             this.shooterPool.forEachAlive(function (enemy) {
                 if (this.time.now > enemy.nextShotAt && this.enemyBulletPool.countDead() > 0) {
@@ -373,30 +539,28 @@
                 }
             }
         },
-        
+
         processPlayerInput: function () {
             //  This will update the sprite.rotation so that it points to the currently active pointer
             //  On a Desktop that is the mouse, on mobile the most recent finger press.
             this.player.rotation = this.game.physics.arcade.angleToPointer(this.player);
-            
+
             // Up and Down movement
             if (this.cursors.up.isDown || this.input.keyboard.isDown(Phaser.Keyboard.W)) {
                 this.game.physics.arcade.accelerationFromRotation(this.player.rotation, 200, this.player.body.acceleration);
                 this.renderTrail();
-            }
-            else if (this.cursors.down.isDown || this.input.keyboard.isDown(Phaser.Keyboard.S)) {
+            } else if (this.cursors.down.isDown || this.input.keyboard.isDown(Phaser.Keyboard.S)) {
                 this.game.physics.arcade.accelerationFromRotation(this.player.rotation, -100, this.player.body.acceleration);
-            }else{
+            } else {
                 this.player.body.acceleration.set(0);
             }
-            
+
             // Left and Right movement
             if (this.cursors.left.isDown || this.input.keyboard.isDown(Phaser.Keyboard.A)) {
                 // This used to turn the ship: this.player.body.angularVelocity = -300;
-            } 
-            else if (this.cursors.right.isDown || this.input.keyboard.isDown(Phaser.Keyboard.D)) {
+            } else if (this.cursors.right.isDown || this.input.keyboard.isDown(Phaser.Keyboard.D)) {
                 // This used to turn the ship: this.player.body.angularVelocity = 300;
-            }else{
+            } else {
                 //this.player.body.angularVelocity = 0;
             }
 
@@ -409,7 +573,7 @@
                 }
             }
         },
-        
+
         processDelayedEffects: function () {
             if (this.instructions.exists && this.time.now > this.instExpire) {
                 this.instructions.destroy();
@@ -436,23 +600,23 @@
                 this.boss.body.collideWorldBounds = true;
             }
         },
-        
-        renderTrail: function() {
+
+        renderTrail: function () {
             // emit a single particle every frame that the mouse is down
-            this.emitter.emitParticle();  
+            this.emitter.emitParticle();
             //this.emitter.start(true, 1000, 8);
         },
-        
-        renderBitmapTrail: function(){
+
+        renderBitmapTrail: function () {
             this.bmd.context.fillRect(this.player.x, this.player.y, 1, 1);
             this.bmd.dirty = true;
         },
-        
+
         enemyHit: function (bullet, enemy) {
             bullet.kill();
             this.damageEnemy(enemy, 1);
         },
-        
+
         playerHit: function (player, enemy) {
             // check first if this.ghostUntil is not not undefined or null 
             if (this.ghostUntil && this.ghostUntil > this.time.now) {
@@ -475,7 +639,7 @@
                 this.displayEnd(false);
             }
         },
-        
+
         damageEnemy: function (enemy, damage) {
             enemy.damage(damage);
             if (enemy.alive) {
@@ -496,7 +660,7 @@
                 }
             }
         },
-        
+
         addToScore: function (score) {
             this.score += score;
             this.scoreText.text = this.score;
@@ -505,7 +669,7 @@
                 this.spawnBoss();
             }
         },
-        
+
         playerPowerUp: function (player, powerUp) {
             this.addToScore(powerUp.reward);
             powerUp.kill();
@@ -514,7 +678,7 @@
                 this.weaponLevel++;
             }
         },
-        
+
         displayEnd: function (win) {
             // you can't win and lose at the same time
             if (this.endText && this.endText.exists) {
@@ -530,7 +694,7 @@
 
             this.showReturn = this.time.now + Phaser.Timer.SECOND * 2;
         },
-        
+
         explode: function (sprite) {
             if (this.explosionPool.countDead() === 0) {
                 return;
@@ -542,7 +706,7 @@
             explosion.body.velocity.x = sprite.body.velocity.x;
             explosion.body.velocity.y = sprite.body.velocity.y;
         },
-        
+
         spawnPowerUp: function (enemy) {
             if (this.powerUpPool.countDead() === 0 || this.weaponLevel === 5) {
                 return;
@@ -553,7 +717,7 @@
                 powerUp.body.velocity.y = 100;
             }
         },
-        
+
         spawnBoss: function () {
             this.bossApproaching = true;
             this.boss.reset(this.game.width / 2, 0, 250);
@@ -561,7 +725,7 @@
             this.boss.body.velocity.y = 15;
             this.boss.play('fly');
         },
-        
+
         fire: function () {
             // Rate of fire
             if (!this.player.alive || this.nextShotAt > this.time.now) {
@@ -602,7 +766,7 @@
                 }
             }
         },
-        
+
         quitGame: function (pointer) {
             //  Here you should destroy anything you no longer need.
             //  Stop music, delete sprites, purge caches, free resources, all that good stuff.
@@ -622,38 +786,30 @@
             //  Then let's go back to the main menu.
             this.state.start('MainMenu');
         },
-        
+
         screenWrap: function (sprite) {
             // Player and bullets will exit one side of the screen and enter from the other side - Like galaga
-            if (sprite.x < 0)
-            {
+            if (sprite.x < 0) {
                 sprite.x = this.game.width;
-            }
-            else if (sprite.x > this.game.width)
-            {
+            } else if (sprite.x > this.game.width) {
                 sprite.x = 0;
             }
 
-            if (sprite.y < 0)
-            {
+            if (sprite.y < 0) {
                 sprite.y = this.game.height;
-            }
-            else if (sprite.y > this.game.height)
-            {
+            } else if (sprite.y > this.game.height) {
                 sprite.y = 0;
             }
         },
-        
-        scrollBackground: function() {
+
+        scrollBackground: function () {
             // This function is needed for the a TileMap
             // Scroll background image as player moves
-            if (!this.game.camera.atLimit.x)
-            {
+            if (!this.game.camera.atLimit.x) {
                 this.background.tilePosition.x += (this.player.body.velocity.x * 0.5) * this.game.time.physicsElapsed;
             }
 
-            if (!this.game.camera.atLimit.y)
-            {
+            if (!this.game.camera.atLimit.y) {
                 this.background.tilePosition.y += (this.player.body.velocity.y * 0.5) * this.game.time.physicsElapsed;
             }
         }

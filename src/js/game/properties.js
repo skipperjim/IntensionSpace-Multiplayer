@@ -3,10 +3,10 @@ module.exports = {
   description: 'My game using Phaser', 
   port: 3017,
   liveReloadPort: 3018,
-  showStats: true,
+  showStats: false,
   size: { 
-    x: 800,
-    y: 600
+    x: '100', // '100' = 100%
+    y: '100'
   },
   SEA_SCROLL_SPEED: 12,
   PLAYER_SPEED: 300,
